@@ -40,7 +40,7 @@ def column_validation(df1, df2):
         logger.warning(f"Columns missing in DataFrame 2: {missing_df2_columns}.")
 
     if not missing_df1_columns and not missing_df2_columns:
-        logger.info("All columns match.")
+        logger.info("All column names match and there are no missing columns between the datasets.")
 
 
 def column_level_validation(df1, df2):
