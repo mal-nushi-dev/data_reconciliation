@@ -50,6 +50,7 @@ def column_level_validation(df1, df2):
     # Rows that are only in source_df or only in target_df
     diff_df = merged_df[merged_df['_merge'] != 'both']
     if diff_df.empty:
-        logger.info("There are no differences in the data.")
+        logger.info("There are no differences between the datasets.")
     else:
+        logger.warning("There are differences between the datasets.")
         pd.DataFrame.to_html(diff_df, 'assets/outputs/diff.html')
