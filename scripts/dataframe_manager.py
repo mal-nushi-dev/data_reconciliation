@@ -1,4 +1,5 @@
 import pandas as pd
+import sys
 from scripts.logging_config import get_logger
 
 
@@ -36,8 +37,10 @@ def column_validation(df1, df2):
     missing_df2_columns = set(df2_record_count) - set(df1_record_count)
     if missing_df1_columns:
         logger.warning(f"Columns missing in DataFrame 1: {missing_df1_columns}.")
+        sys.exit()
     if missing_df2_columns:
         logger.warning(f"Columns missing in DataFrame 2: {missing_df2_columns}.")
+        sys.exit()
 
     if not missing_df1_columns and not missing_df2_columns:
         logger.info("All column names match and there are no missing columns between the datasets.")
