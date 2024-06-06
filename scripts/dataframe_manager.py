@@ -36,24 +36,58 @@ def column_validation(df1, df2):
     missing_df1_columns = set(df1_record_count) - set(df2_record_count)
     missing_df2_columns = set(df2_record_count) - set(df1_record_count)
     if missing_df1_columns:
-        logger.warning(f"Columns missing in DataFrame 1: {missing_df1_columns}.")
+        logger.warning(f"Columns missing in DataFrame 1: {
+                       missing_df1_columns}.")
         sys.exit()
     if missing_df2_columns:
-        logger.warning(f"Columns missing in DataFrame 2: {missing_df2_columns}.")
+        logger.warning(f"Columns missing in DataFrame 2: {
+                       missing_df2_columns}.")
         sys.exit()
 
     if not missing_df1_columns and not missing_df2_columns:
-        logger.info("All column names match and there are no missing columns between the datasets.")
+        logger.info(
+            "All column names match and there are no missing columns between the datasets.")
 
 
-def column_level_validation(df1, df2):
-    # Merge the two dataframes, indicator=True adds a column '_merge' that indicates where the merge matched
-    merged_df = pd.merge(df1, df2, how='outer', indicator=True)
+def data_validation(df1, df2, output_path='assets/outputs/diff.html'):
+    # Check if DataFrames have the same columns
+    if set(df1.columns) != set(df2.columns):
+        logger.warning("DataFrames do not have the same columns.")
+        return
 
-    # Rows that are only in source_df or only in target_df
-    diff_df = merged_df[merged_df['_merge'] != 'both']
-    if diff_df.empty:
+    # Reindex DataFrames to ensure alignment
+    df1 = df1.reindex_like(df2)
+
+    # Identify rows with any differences
+    differences = df1 != df2
+    rows_with_differences = differences.any(axis=1)
+
+    if not rows_with_differences.any():
         logger.info("There are no differences between the datasets.")
+        return
     else:
         logger.warning("There are differences between the datasets.")
-        pd.DataFrame.to_html(diff_df, 'assets/outputs/diff.html')
+
+    # Create a new DataFrame to hold the differences side by side for the rows with differences
+    diff = pd.DataFrame(index=df1.index[rows_with_differences])
+    for col in df1.columns:
+        diff[f'{col}_source'] = df1.loc[rows_with_differences, col]
+        diff[f'{col}_target'] = df2.loc[rows_with_differences, col]
+
+    # Highlight differences using Styler
+    def highlight_diffs(data):
+        color = 'background-color: yellow'
+        df_styler = pd.DataFrame('', index=data.index, columns=data.columns)
+        for col in df1.columns:
+            df_styler.loc[differences[col] &
+                          rows_with_differences, f'{col}_source'] = color
+            df_styler.loc[differences[col] &
+                          rows_with_differences, f'{col}_target'] = color
+        return df_styler
+
+    # Style the DataFrame
+    styled_diff = diff.style.apply(highlight_diffs, axis=None)
+
+    # Save the styled DataFrame to an HTML file
+    styled_diff.to_html(output_path)
+    logger.info(f"Differences highlighted and saved to {output_path}")
