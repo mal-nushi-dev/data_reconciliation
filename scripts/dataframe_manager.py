@@ -6,88 +6,99 @@ from scripts.logging_config import get_logger
 logger = get_logger()
 
 
-def row_count_validation(df1, df2):
-    # Check counts
-    df1_record_count = df1.shape[0]
-    df2_record_count = df2.shape[0]
+class DataFrameValidator:
+    def __init__(self, df1, df2):
+        self.df1 = df1
+        self.df2 = df2
 
-    logger.info(f"Source record count: {df1_record_count}")
-    logger.info(f"Target record count: {df2_record_count}")
+    def validate(self):
+        self.row_count_validation()
+        self.column_validation()
+        self.data_validation()
 
-    if df1_record_count == df2_record_count:
-        logger.info("Counts are the same")
-    else:
-        logger.warning("Counts are different")
+    def row_count_validation(self):
+        df1_record_count = self.df1.shape[0]
+        df2_record_count = self.df2.shape[0]
 
+        logger.info(f"Source record count: {df1_record_count}")
+        logger.info(f"Target record count: {df2_record_count}")
 
-def column_validation(df1, df2):
-    df1_record_count = df1.columns
-    df2_record_count = df2.columns
+        if df1_record_count == df2_record_count:
+            logger.info("Row counts are the same.")
+        else:
+            logger.error("Row counts are different.")
+            sys.exit(1)
 
-    # Check column counts
-    logger.info(f"Source columns: {len(df1_record_count)}.")
-    logger.info(f"Target columns: {len(df2_record_count)}.")
-    if len(df1_record_count) == len(df2_record_count):
-        logger.info("Column counts are the same.")
-    else:
-        logger.warning("Column counts are different.")
+    def column_validation(self):
+        df1_columns = self.df1.columns
+        df2_columns = self.df2.columns
 
-    # Check for missing columns in each DataFrame
-    missing_df1_columns = set(df1_record_count) - set(df2_record_count)
-    missing_df2_columns = set(df2_record_count) - set(df1_record_count)
-    if missing_df1_columns:
-        logger.warning(f"Columns missing in DataFrame 1: {
-                       missing_df1_columns}.")
-        sys.exit()
-    if missing_df2_columns:
-        logger.warning(f"Columns missing in DataFrame 2: {
-                       missing_df2_columns}.")
-        sys.exit()
+        logger.info(f"Source columns: {len(df1_columns)}.")
+        logger.info(f"Target columns: {len(df2_columns)}.")
 
-    if not missing_df1_columns and not missing_df2_columns:
-        logger.info(
-            "All column names match and there are no missing columns between the datasets.")
+        if len(df1_columns) == len(df2_columns):
+            logger.info("Column counts are the same.")
+        else:
+            logger.error("Column counts are different.")
 
+        missing_df1_columns = set(df1_columns) - set(df2_columns)
+        missing_df2_columns = set(df2_columns) - set(df1_columns)
 
-def data_validation(df1, df2, output_path='assets/outputs/diff.html'):
-    # Check if DataFrames have the same columns
-    if set(df1.columns) != set(df2.columns):
-        logger.warning("DataFrames do not have the same columns.")
-        return
+        if missing_df1_columns:
+            logger.error(f"columns missing in Dataframe 1: {missing_df1_columns}.")
+            sys.exit(1)
+        if missing_df2_columns:
+            logger.error(f"Columns missing in Dataframe 2: {missing_df2_columns}.")
+            sys.exit(1)
 
-    # Reindex DataFrames to ensure alignment
-    df1 = df1.reindex_like(df2)
+        if not missing_df1_columns and not missing_df2_columns:
+            logger.info("All column names match and there are no missing columns.")
 
-    # Identify rows with any differences
-    differences = df1 != df2
-    rows_with_differences = differences.any(axis=1)
+    def data_validation(self, output_path='assets/outputs/diff.html'):
+        """
+        Validate that the data in both DataFrames is the same and highlight differences.
+        Save the differences to an HTML file.
+        """
+        if set(self.df1.columns) != set(self.df2.columns):
+            logger.warning("DataFrames do not have the same columns.")
+            return
 
-    if not rows_with_differences.any():
-        logger.info("There are no differences between the datasets.")
-        return
-    else:
-        logger.warning("There are differences between the datasets.")
+        self.df1 = self.df1.reindex_like(self.df2)
 
-    # Create a new DataFrame to hold the differences side by side for the rows with differences
-    diff = pd.DataFrame(index=df1.index[rows_with_differences])
-    for col in df1.columns:
-        diff[f'{col}_source'] = df1.loc[rows_with_differences, col]
-        diff[f'{col}_target'] = df2.loc[rows_with_differences, col]
+        differences = self.df1 != self.df2
+        rows_with_differences = differences.any(axis=1)
 
-    # Highlight differences using Styler
-    def highlight_diffs(data):
-        color = 'background-color: yellow'
-        df_styler = pd.DataFrame('', index=data.index, columns=data.columns)
-        for col in df1.columns:
-            df_styler.loc[differences[col] &
-                          rows_with_differences, f'{col}_source'] = color
-            df_styler.loc[differences[col] &
-                          rows_with_differences, f'{col}_target'] = color
-        return df_styler
+        if not rows_with_differences.any():
+            logger.info("There are no differences between the datasets.")
+            return
+        else:
+            logger.warning("There are differences between the datasets.")
 
-    # Style the DataFrame
-    styled_diff = diff.style.apply(highlight_diffs, axis=None)
+        diff = self._create_diff_dataframe(differences, rows_with_differences)
+        styled_diff = self._highlight_diffs(diff, differences, rows_with_differences)
+        styled_diff.to_html(output_path)
+        logger.info(f"Differences highlighted and saved to {output_path}")
 
-    # Save the styled DataFrame to an HTML file
-    styled_diff.to_html(output_path)
-    logger.info(f"Differences highlighted and saved to {output_path}")
+    def _create_diff_dataframe(self, differences, rows_with_differences):
+        """
+        Create a DataFrame to show the differences side by side.
+        """
+        diff = pd.DataFrame(index=self.df1.index[rows_with_differences])
+        for col in self.df1.columns:
+            diff[f'{col}_source'] = self.df1.loc[rows_with_differences, col]
+            diff[f'{col}_target'] = self.df2.loc[rows_with_differences, col]
+        return diff
+
+    def _highlight_diffs(self, diff, differences, rows_with_differences):
+        """
+        Apply highlighting to the differences in the DataFrame.
+        """
+        def highlight_diffs(data):
+            color = 'background-color: yellow'
+            df_styler = pd.DataFrame('', index=data.index, columns=data.columns)
+            for col in self.df1.columns:
+                df_styler.loc[differences[col] & rows_with_differences, f'{col}_source'] = color
+                df_styler.loc[differences[col] & rows_with_differences, f'{col}_target'] = color
+            return df_styler
+
+        return diff.style.apply(highlight_diffs, axis=None)
