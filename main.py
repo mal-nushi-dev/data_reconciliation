@@ -1,23 +1,11 @@
-import logging
 import pandas as pd
-from configparser import ConfigParser
-import coloredlogs
+from scripts.logging_config import get_logger
+from scripts.get_config import get_config
 
-# Create a logger object
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)  # Set the minimum logging level
+logger = get_logger()
 
-# Create a coloredlogs format
-coloredlogs_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-
-# Configure coloredlogs
-coloredlogs.install(level='DEBUG', logger=logger, fmt=coloredlogs_format)
-
-config = ConfigParser()
-config.read('config.ini')
-
-source_file = config.get('DEFAULT', 'source_file')
-target_file = config.get('DEFAULT', 'target_file')
+source_file = get_config('INPUTS', 'SOURCE_FILE')
+target_file = get_config('INPUTS', 'TARGET_FILE')
 
 source_df = pd.read_csv(source_file)
 target_df = pd.read_csv(target_file)
