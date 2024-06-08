@@ -1,9 +1,9 @@
 import pandas as pd
 import sys
-from scripts.logging_config import get_logger
+from modules.logging_config import Logger
 
 
-logger = get_logger()
+logger = Logger()
 
 
 class DataFrameValidator:
