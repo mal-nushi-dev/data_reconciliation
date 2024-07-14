@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import sys
 from modules.logging_config import Logger
+from modules.get_config import get_config
 
 
 logger = Logger()
@@ -44,7 +45,8 @@ class DataFrameValidator:
         self.row_count_validation()
         self.column_validation()
         self.data_validation()
-        self.numeric_min_max_check()
+        self.numeric_column_extra_validations()
+        self.date_column_extra_validations()
 
     def row_count_validation(self):
         """Validates that both DataFrames have the same number of rows."""
@@ -185,29 +187,152 @@ class DataFrameValidator:
         # Apply the highlighting function to the DataFrame
         return diff.style.apply(highlight_diffs, axis=None)
 
-    def numeric_min_max_check(self):
+    def numeric_column_extra_validations(self) -> None:
         """
+        Retrieves numeric-type columns based on the configuration settings, and triggers validation checks.
+
+        If 'AUTO_NUMERIC_DISCOVER' is set to '1', it automatically discovers numeric-type columns.
+        If 'AUTO_NUMERIC_DISCOVER' is set to '0', it retrieves numeric-type columns from the configuration.
+        Logs an error if there is an issue with retrieving the numeric-type columns.
         """
 
-        # Get the list of numeric columns from DataFrames
-        numeric_columns = self.df1.select_dtypes(include=[np.number]).columns
-        logger.info(f"Checking the min and max values for these numeric columns: {list(numeric_columns)}")
+        # Initialize 'numeric_columns' as an empty list
+        numeric_columns = []
 
-        # Check for min and max values for each numeric column
-        for col in numeric_columns:
+        try:
+            # Retrieve the 'AUTO_NUMERIC_DISCOVER' configuration value
+            auto_numeric_discover = get_config('COLUMN_TYPES', 'AUTO_NUMERIC_DISCOVER')
+
+            if auto_numeric_discover == '1':
+                numeric_columns = self.df1.select_dtypes(include=[np.number]).columns
+            elif auto_numeric_discover == '0':
+                numeric_columns = [item.strip() for item in get_config('COLUMN_TYPES', 'NUMERIC').split(',')]
+            else:
+                raise ValueError(f"Invalid value for 'AUTO_NUMERIC_DISCOVER' in 'config.ini' file: {auto_numeric_discover}")
+
+            # Perform validation checks with the discovered numeric-type columns
+            self.min_max_check(datatype='Numeric', columns=numeric_columns)
+            self.median_check(datatype='Numeric', columns=numeric_columns)
+            # self.mode_check(datatype='Numeric', columns=numeric_columns)
+        except Exception as e:
+            logger.error(f"Error while retrieving the numeric-type columns: {e}")
+
+    def date_column_extra_validations(self) -> None:
+        """
+        Retrieves date-type columns based on the configuration settings, and triggers validation checks.
+
+        If 'AUTO_DATE_DISCOVER' is set to '1', it automatically discovers date-type columns.
+        If 'AUTO_DATE_DISCOVER' is set to '0', it retrieves date-type columns from the configuration.
+        Logs an error if there is an issue with retrieving the date-type columns.
+        """
+
+        # Initialize 'date_columns' as an empty list
+        date_columns = []
+
+        try:
+            # Retrieve the 'AUTO_DATE_DISCOVER' configuration value
+            auto_date_discover = get_config('COLUMN_TYPES', 'AUTO_DATE_DISCOVER')
+
+            # TODO: Enable the AUTO_DATE_DISCOVER feature
+            if auto_date_discover == '1':
+                date_columns = self.df1.select_dtypes(include=[np.number]).columns
+            elif auto_date_discover == '0':
+                date_columns = [item.strip() for item in get_config('COLUMN_TYPES', 'DATE').split(',')]
+            else:
+                raise ValueError(f"Invalid value for 'AUTO_DATE_DISCOVER' in 'config.ini' file: {auto_date_discover}")
+
+            # Perform validation checks with the discovered date-type columns
+            self.min_max_check(datatype='Date', columns=date_columns)
+            # self.median_check(datatype='Date', columns=date_columns)
+            # self.mode_check(datatype='Date', columns=date_columns)
+        except Exception as e:
+            logger.error(f"Error while retrieving the date-type columns: {e}")
+
+    def min_max_check(self, datatype: str, columns: list[str]) -> None:
+        """
+        Checks the minimum and maximum values of specified columns in two DataFrames and logs any discrepancies.
+
+        Args:
+            datatype (str): The datatype of the columns being checked.
+            columns (list): The list of columns to check for minimum and maximum values.
+        """
+
+        # Check for min and max values for each column
+        logger.info(f"Checking the MIN and MAX values for these {datatype} columns: {list(columns)}")
+        for col in columns:
+            # Calculate the min and max values
             min1 = self.df1[col].min()
             max1 = self.df1[col].max()
 
             min2 = self.df2[col].min()
             max2 = self.df2[col].max()
 
+            # Check if the min and max values match between the two DataFrames
             if min1 != min2 or max1 != max2:
                 logger.warning(f"Value range mismatch in column {col}: "
-                               f"Dataset1 (min: {min1}, max: {max1}), "
-                               f"Dataset2 (min: {min2}, max: {max2})")
+                               f"Source: (min: {min1}, max: {max1}), "
+                               f"Target: (min: {min2}, max: {max2})")
             else:
                 logger.info(f"The min and max values match between both datasets for the columnn: {col}: "
-                            f"Dataset1 (min: {min1}, max: {max1}), "
-                            f"Dataset2 (min: {min2}, max: {max2})")
+                            f"Source: (min: {min1}, max: {max1}), "
+                            f"Target: (min: {min2}, max: {max2})")
 
-        return True
+    def median_check(self, datatype: str, columns: list[str]) -> None:
+        """
+        Checks the median values for specified columns in two DataFrames and logs any discrepancies.
+
+        Args:
+            datatype (str): The datatype of the columns being checked.
+            columns (list): The list of columns to check for the median value.
+        """
+
+        try:
+            # Check for median values for each column
+            logger.info(f"Checking the median values for these columns: {columns}")
+            for col in columns:
+                # Calculate the median value
+                med1 = self.df1[col].median()
+                med2 = self.df2[col].median()
+
+                # Check if the median values match between the two DataFrames
+                if med1 != med2:
+                    logger.warning(f"Median mismatch in column {col}: "
+                                   f"Dataset1 (median: {med1}), "
+                                   f"Dataset2 (median: {med2})")
+                else:
+                    logger.info(f"The median values matched between both datasets for the column: {col}: "
+                                f"Dataset1 (median: {med1}), "
+                                f"Dataset2 (median: {med2})")
+        except Exception as e:
+            logger.error(f"Error during median check: {e}")
+            sys.exit(1)
+
+    # def mode_check(self, datatype: str, columns: list[str]) -> None:
+    #     """
+    #     Checks the mode values for specified columns in two DataFrames and logs any discrepancies.
+
+    #     Args:
+    #         datatype (str): The datatype of the columns being checked.
+    #         columns (list): The list of columns to check for the mode value.
+    #     """
+
+    #     try:
+    #         # Check for mode values for each column
+    #         logger.info(f"Checking the mode values for these columns: {columns}")
+    #         for col in columns:
+    #             # Calculate the mode value
+    #             mode1 = self.df1[col].mode()
+    #             mode2 = self.df2[col].mode()
+
+    #             # Check if the mode values match between the two DataFrames
+    #             if mode1 != mode2:
+    #                 logger.warning(f"Mode mismatch in column {col}: "
+    #                                f"Dataset1 (mode: {mode1}), "
+    #                                f"Dataset2 (mode: {mode2})")
+    #             else:
+    #                 logger.info(f"The mode values matched between both datasets for the column: {col}: "
+    #                             f"Dataset1 (mode: {mode1}), "
+    #                             f"Dataset2 (mode: {mode2})")
+    #     except Exception as e:
+    #         logger.error(f"Error during mode check: {e}")
+    #         sys.exit(1)
