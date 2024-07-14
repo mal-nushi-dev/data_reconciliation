@@ -11,7 +11,7 @@ class Logger:
         logger (logging.Logger): The logger instance.
     """
 
-    def __init__(self, name=None, level=None, log_to_file=False, log_filename='app.log'):
+    def __init__(self, name: str = None, level: str = None, log_to_file: bool = False, log_filename: str = 'app.log') -> None:
         """
         Initializes the Logger instance.
 
@@ -37,28 +37,29 @@ class Logger:
             file_handler.setFormatter(file_format)
             self.logger.addHandler(file_handler)
 
-    def debug(self, message):
+    def debug(self, message: str) -> None:
         """Logs a debug message."""
         self.logger.debug(message)
 
-    def info(self, message):
+    def info(self, message: str) -> None:
         """Logs an info message."""
         self.logger.info(message)
 
-    def warning(self, message):
+    def warning(self, message: str) -> None:
         """Logs a warning message."""
         self.logger.warning(message)
 
-    def error(self, message):
+    def error(self, message: str) -> None:
         """Logs an error message."""
         self.logger.error(message)
 
-    def critical(self, message):
+    def critical(self, message: str) -> None:
         """Logs a critical message."""
         self.logger.critical(message)
 
 
 if __name__ == "__main__":
+    # Example usage
     logger = Logger(__name__)
     logger.debug("This is a debug message.")
     logger.info("This is an info message.")
