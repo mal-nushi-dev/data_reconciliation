@@ -23,7 +23,7 @@ class DataFrameValidator:
             df1 (pd.DataFrame): The first DataFrame.
             df2 (pd.DataFrame): The second DataFrame.
         """
-        
+
         self.df1 = df1
         self.df2 = df2
 
