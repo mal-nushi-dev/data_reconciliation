@@ -19,7 +19,7 @@ class Logger:
         critical(message: str): Logs a critical message.
     """
 
-    def __init__(self, name: str = None, level: str = None, log_to_file: bool = False, log_filename: str = 'app.log') -> None:
+    def __init__(self, name: str = None, level: str = None, log_to_file: bool = True, overwrite: bool = True, log_filename: str = 'app.log') -> None:
         """
         Initializes the Logger instance.
 
@@ -27,6 +27,7 @@ class Logger:
             name (str, optional): The name of the logger. Defaults to None.
             level (str, optional): The logging level. Defaults to None.
             log_to_file (bool, optional): Whether to log to a file. Defaults to False.
+            overwrite (bool, optional): Whether to overwrite the log file. Defaults to False.
             log_filename (str, optional): The filename for the log file. Defaults to 'app.log'.
         """
 
@@ -40,7 +41,8 @@ class Logger:
         coloredlogs.install(level=level, logger=self.logger, fmt=coloredlogs_format)
 
         if log_to_file:
-            file_handler = logging.FileHandler(log_filename)
+            file_mode = 'w' if overwrite else 'a'  # 'w' for overwrite mode, 'a' for append mode
+            file_handler = logging.FileHandler(log_filename, mode=file_mode)
             file_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
             file_handler.setFormatter(file_format)
             self.logger.addHandler(file_handler)

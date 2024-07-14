@@ -3,3 +3,4 @@ modules/__pycache__/*.pyc
 .DS_Store
 assets/outputs/diff.html
 test_main.py
+app.log
