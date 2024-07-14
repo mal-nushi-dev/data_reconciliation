@@ -12,6 +12,7 @@ def main():
     source_df = pd.read_csv(source_file)
     target_df = pd.read_csv(target_file)
 
+    # Validate the data between the DataFrames
     validator = DataFrameValidator(source_df, target_df)
     validator.validate()
 
