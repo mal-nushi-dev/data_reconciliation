@@ -17,6 +17,7 @@ class DataFrameValidator:
 
     def __init__(self, df1: pd.DataFrame, df2: pd.DataFrame) -> None:
         """
+
         Initializes the DataFrameValidator class with two DataFrames.
 
         Args:
