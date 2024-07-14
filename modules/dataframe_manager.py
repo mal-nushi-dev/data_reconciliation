@@ -144,7 +144,7 @@ class DataFrameValidator:
             diff[f'{col}_target'] = self.df2.loc[rows_with_differences, col]
         return diff
 
-    def _highlight_diffs(self, diff: pd.DataFrame, differences: pd.DataFrame, rows_with_differences: pd.Series) -> pd.io.formats.style.Styler:
+    def _highlight_diffs(self, diff: pd.DataFrame, differences: pd.DataFrame, rows_with_differences: pd.Series):
         """
         Apply highlighting to the differences in the DataFrame.
 
