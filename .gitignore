@@ -6,3 +6,4 @@ modules/__pycache__/logging_config.cpython-312.pyc
 modules/pycache/*
 modules/__pycache__/*
 .DS_Store
+*__pycache__/*.pyc
