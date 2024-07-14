@@ -9,6 +9,14 @@ class Logger:
 
     Attr:
         logger (logging.Logger): The logger instance.
+
+    Methods:
+        __init__(name: str = None, level: str = None, log_to_file: bool = False, log_filename: str = 'app.log'): Initializes the Logger instance.
+        debug(message: str): Logs a debug message.
+        info(message: str): Logs an info message.
+        warning(message: str): Logs a warning message.
+        error(message: str): Logs an error message.
+        critical(message: str): Logs a critical message.
     """
 
     def __init__(self, name: str = None, level: str = None, log_to_file: bool = False, log_filename: str = 'app.log') -> None:
