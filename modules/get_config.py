@@ -5,7 +5,7 @@ import os
 CONFIG_FILE_PATH = 'config.ini'
 
 
-def read_config(config_file=CONFIG_FILE_PATH):
+def read_config(config_file: str = CONFIG_FILE_PATH) -> ConfigParser:
     """
     Reads the configuration file and returns a ConfigParser object.
 
@@ -29,7 +29,7 @@ def read_config(config_file=CONFIG_FILE_PATH):
     return config
 
 
-def get_config(section, option, config_file=CONFIG_FILE_PATH):
+def get_config(section: str, option: str, config_file: str = CONFIG_FILE_PATH) -> str:
     """
     Retrieves the value of the given option in the specified section from the configuration file.
 
@@ -44,7 +44,7 @@ def get_config(section, option, config_file=CONFIG_FILE_PATH):
     Raises:
         KeyError: If the section or option is not found in the config file.
     """
-    
+
     config = read_config(config_file)
     try:
         value = config.get(section, option)
