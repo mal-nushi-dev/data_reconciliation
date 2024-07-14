@@ -1,11 +1,4 @@
-modules/__pycache__/logging_config.cpython-312.pyc
-modules/__pycache__/__init__.cpython-312.pyc
-modules/__pycache__/dataframe_manager.cpython-312.pyc
-modules/__pycache__/get_config.cpython-312.pyc
-modules/__pycache__/logging_config.cpython-312.pyc
-modules/pycache/*
 modules/__pycache__/*
 modules/__pycache__/*.pyc
 .DS_Store
-*__pycache__/*.pyc
 assets/outputs/diff.html
