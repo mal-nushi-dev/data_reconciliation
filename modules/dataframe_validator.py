@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import sys
 from modules.logging_config import Logger
 
@@ -43,6 +44,7 @@ class DataFrameValidator:
         self.row_count_validation()
         self.column_validation()
         self.data_validation()
+        self.numeric_min_max_check()
 
     def row_count_validation(self):
         """Validates that both DataFrames have the same number of rows."""
@@ -182,3 +184,30 @@ class DataFrameValidator:
 
         # Apply the highlighting function to the DataFrame
         return diff.style.apply(highlight_diffs, axis=None)
+
+    def numeric_min_max_check(self):
+        """
+        """
+
+        # Get the list of numeric columns from DataFrames
+        numeric_columns = self.df1.select_dtypes(include=[np.number]).columns
+        logger.info(f"Checking the min and max values for these numeric columns: {list(numeric_columns)}")
+
+        # Check for min and max values for each numeric column
+        for col in numeric_columns:
+            min1 = self.df1[col].min()
+            max1 = self.df1[col].max()
+
+            min2 = self.df2[col].min()
+            max2 = self.df2[col].max()
+
+            if min1 != min2 or max1 != max2:
+                logger.warning(f"Value range mismatch in column {col}: "
+                               f"Dataset1 (min: {min1}, max: {max1}), "
+                               f"Dataset2 (min: {min2}, max: {max2})")
+            else:
+                logger.info(f"The min and max values match between both datasets for the columnn: {col}: "
+                            f"Dataset1 (min: {min1}, max: {max1}), "
+                            f"Dataset2 (min: {min2}, max: {max2})")
+
+        return True

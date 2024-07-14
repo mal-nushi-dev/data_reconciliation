@@ -1,6 +1,6 @@
 import pandas as pd
 from modules.get_config import get_config
-from modules.dataframe_manager import DataFrameValidator
+from modules.dataframe_validator import DataFrameValidator
 
 
 def main():
