@@ -13,6 +13,15 @@ class DataFrameValidator:
     Attr:
         df1 (pd.DataFrame): The first DataFrame.
         df2 (pd.DataFrame): The second DataFrame.
+
+    Methods:
+        __init__(df1: pd.DataFrame, df2: pd.DataFrame): Initializes the DataFrameValidator with two DataFrames.
+        validate(): Runs all validation checks on the DataFrames.
+        row_count_validation(): Validates that both DataFrames have the same number of rows.
+        column_validation(): Validates that both DataFrames have the same columns and column counts.
+        data_validation(output_path: str = 'assets/outputs/diff.html'): Validates that the data in both DataFrames is the same and highlights differences.
+        _create_diff_dataframe(differences: pd.DataFrame, rows_with_differences: pd.Series): Creates a DataFrame to show the differences side by side.
+        _highlight_diffs(diff: pd.DataFrame, differences: pd.DataFrame, rows_with_differences: pd.Series): Applies highlighting to the differences in the DataFrame.
     """
 
     def __init__(self, df1: pd.DataFrame, df2: pd.DataFrame) -> None:
